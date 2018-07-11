@@ -153,7 +153,18 @@ class QRScanner : CDVPlugin, AVCaptureMetadataOutputObjectsDelegate {
                 metaOutput = AVCaptureMetadataOutput()
                 captureSession!.addOutput(metaOutput)
                 metaOutput!.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-                metaOutput!.metadataObjectTypes = [AVMetadataObjectTypeQRCode]
+                metaOutput!.metadataObjectTypes = [
+                    AVMetadataObjectTypeQRCode,
+                    // Additional formats
+                    AVMetadataObjectTypeDataMatrixCode,
+                    AVMetadataObjectTypeEAN13Code,
+                    // EAN-13 includes UPC-A
+                    AVMetadataObjectTypeUPCECode,
+                    AVMetadataObjectTypeEAN8Code,
+                    AVMetadataObjectTypeEAN13Code,
+                    AVMetadataObjectTypeCode39Code,
+                    AVMetadataObjectTypeCode128Code
+                ]
                 captureVideoPreviewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
                 cameraView.addPreviewLayer(captureVideoPreviewLayer)
                 captureSession!.startRunning()
@@ -238,7 +249,16 @@ class QRScanner : CDVPlugin, AVCaptureMetadataOutputObjectsDelegate {
             return
         }
         let found = metadataObjects[0] as! AVMetadataMachineReadableCodeObject
-        if found.type == AVMetadataObjectTypeQRCode && found.stringValue != nil {
+        if (found.type == AVMetadataObjectTypeQRCode ||
+            // Additional formats
+            found.type == AVMetadataObjectTypeDataMatrixCode ||
+            found.type == AVMetadataObjectTypeEAN13Code ||
+            // EAN-13 includes UPC-A
+            found.type == AVMetadataObjectTypeUPCECode ||
+            found.type == AVMetadataObjectTypeEAN8Code ||
+            found.type == AVMetadataObjectTypeEAN13Code ||
+            found.type == AVMetadataObjectTypeCode39Code ||
+            found.type == AVMetadataObjectTypeCode128Code) && found.stringValue != nil {
             scanning = false
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: found.stringValue)
             commandDelegate!.send(pluginResult, callbackId: nextScanningCommand?.callbackId!)
